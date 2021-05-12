@@ -444,7 +444,7 @@ func GetConfigStruct() (TestConfig, error) {
 		if configStruct.Provider.OrgPassword == "" {
 			return TestConfig{}, fmt.Errorf("[%s] configStruct.Provider.orgUser not filled", baseMsg)
 		}
-		if configStruct.VCD.Org== "" {
+		if configStruct.VCD.Org == "" {
 			return TestConfig{}, fmt.Errorf("[%s] configStruct.VCD.Org not filled", baseMsg)
 		}
 		configStruct.Provider.User = configStruct.Provider.OrgUser
