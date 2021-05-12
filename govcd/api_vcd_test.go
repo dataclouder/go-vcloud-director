@@ -41,6 +41,7 @@ func init() {
 	setBoolFlag(&ignoreCleanupFile, "vcd-ignore-cleanup-file", "GOVCD_IGNORE_CLEANUP_FILE", "Does not process previous cleanup file")
 	setBoolFlag(&debugShowRequestEnabled, "vcd-show-request", "GOVCD_SHOW_REQ", "Shows API request")
 	setBoolFlag(&debugShowResponseEnabled, "vcd-show-response", "GOVCD_SHOW_RESP", "Shows API response")
+	setBoolFlag(&vcdTestOrgUser, "vcd-test-org-user", envVcdTestOrgUser, "Run tests with org user")
 
 }
 
@@ -89,6 +90,7 @@ const (
 	TestLb                        = "TestLb"
 	TestNsxvSnatRule              = "TestNsxvSnatRule"
 	TestNsxvDnatRule              = "TestNsxvDnatRule"
+	envVcdTestOrgUser             = "VCD_TEST_ORG_USER"
 )
 
 const (
@@ -123,6 +125,8 @@ type TestConfig struct {
 		SysOrg          string `yaml:"sysOrg"`
 		MaxRetryTimeout int    `yaml:"maxRetryTimeout,omitempty"`
 		HttpTimeout     int64  `yaml:"httpTimeout,omitempty"`
+		OrgUser         string `yaml:"orgUser,omitempty"`
+		OrgPassword     string `yaml:"orgPassword,omitempty"`
 	}
 	VCD struct {
 		Org         string `yaml:"org"`
@@ -239,6 +243,9 @@ var persistentCleanupListLock sync.Mutex
 
 // IP of the vCD being tested. It is initialized at the first client authentication
 var persistentCleanupIp string
+
+// If true, enables test using Org user
+var vcdTestOrgUser bool
 
 // Use this value to run a specific test that does not need a pre-created vApp.
 var skipVappCreation bool = os.Getenv("GOVCD_SKIP_VAPP_CREATION") != ""
@@ -428,6 +435,21 @@ func GetConfigStruct() (TestConfig, error) {
 	err = yaml.Unmarshal(yamlFile, &configStruct)
 	if err != nil {
 		return TestConfig{}, fmt.Errorf("could not unmarshal yaml file: %s", err)
+	}
+	if vcdTestOrgUser {
+		baseMsg := "org user testing was requested"
+		if configStruct.Provider.OrgUser == "" {
+			return TestConfig{}, fmt.Errorf("[%s] configStruct.Provider.orgUser not filled", baseMsg)
+		}
+		if configStruct.Provider.OrgPassword == "" {
+			return TestConfig{}, fmt.Errorf("[%s] configStruct.Provider.orgUser not filled", baseMsg)
+		}
+		if configStruct.VCD.Org== "" {
+			return TestConfig{}, fmt.Errorf("[%s] configStruct.VCD.Org not filled", baseMsg)
+		}
+		configStruct.Provider.User = configStruct.Provider.OrgUser
+		configStruct.Provider.Password = configStruct.Provider.OrgPassword
+		configStruct.Provider.SysOrg = configStruct.VCD.Org
 	}
 	return configStruct, nil
 }

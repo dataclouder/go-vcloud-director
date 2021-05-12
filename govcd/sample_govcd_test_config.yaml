@@ -40,6 +40,8 @@ provider:
     # (Optional) httpTimeout specifies a time limit (in seconds) for waiting http response.
     # If omitted - default value is set.
     # httpTimeout: 600
+    orgUser: myorg-admin
+    orgPassword: some-org-password
 vcd:
     # Name of the organization (mandatory)
     org: myorg
